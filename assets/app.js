@@ -68,11 +68,13 @@
   const cssVar = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   const SERIES = ['--s1', '--s2', '--s3', '--s4', '--s5', '--s6', '--s7', '--s8'];
 
+  // direct IEEE Xplore page when known, else the DOI (which lands there too), else a title search
   function paperLink(p) {
-    if (p.doi) return 'https://doi.org/' + p.doi;
     if (p.url) return p.url;
+    if (p.doi) return 'https://doi.org/' + p.doi;
     return 'https://ieeexplore.ieee.org/search/searchresult.jsp?queryText=' + encodeURIComponent('"' + p.title + '"');
   }
+  const hasDirectLink = p => !!(p.url || p.doi);
   function scholarLink(p) {
     return 'https://scholar.google.com/scholar?q=' + encodeURIComponent('"' + p.title + '"');
   }
@@ -262,7 +264,8 @@
     if (p.affil.length) meta.append(el('span', { class: 'affil' }, (p.authors.length ? ' · ' : '') + p.affil.join('; ')));
     if (!p.authors.length && !p.affil.length) meta.append(el('span', { class: 'affil' }, 'authors not listed in the program'));
     const links = el('span', { class: 'links' },
-      el('a', { href: paperLink(p), target: '_blank', rel: 'noopener' }, p.doi ? 'DOI' : 'Xplore'), ' · ',
+      el('a', { href: paperLink(p), target: '_blank', rel: 'noopener', title: hasDirectLink(p) ? (p.doi ? 'DOI ' + p.doi : p.url) : 'No DOI resolved yet; opens an IEEE Xplore title search' },
+        hasDirectLink(p) ? 'IEEE Xplore' : 'Xplore search'), ' · ',
       el('a', { href: scholarLink(p), target: '_blank', rel: 'noopener' }, 'Scholar'));
     meta.append(links);
     const body = el('div', { class: 'body' },

@@ -70,6 +70,12 @@ python build/build.py
 python build/build.py --index /path/to/paper_search/index.json
 ```
 
+Paper links come from `build/fetch_dois.py`, which resolves each title to
+its DOI and IEEE Xplore landing page through the free Crossref API and
+caches the answers in `data/dois.json` (committed, so the build itself never
+needs the network). Run it after adding a new year, then rebuild. Papers it
+cannot match fall back to an IEEE Xplore title search on the site.
+
 Two rule files decide what you see:
 
 - `build/scope.py` – which sessions count. Sessions run by the digital
@@ -104,6 +110,7 @@ assets/style.css    light / dark theme
 data/papers.js      dataset as window.PAPER_DATA (loaded by index.html)
 data/papers.json    the same dataset for scripts
 build/build.py      generator
+build/fetch_dois.py resolves DOIs / Xplore links via Crossref into data/dois.json
 build/scope.py      session and per-paper scope rules
 build/tags.py       topic taxonomy
 build/overrides.json manual corrections

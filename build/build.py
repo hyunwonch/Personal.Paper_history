@@ -47,6 +47,7 @@ REPORT_PATH = os.path.join(BUILD_DIR, "report.txt")
 
 DEFAULT_SOURCE = os.path.join(os.path.dirname(REPO_DIR), "Personal.Python")
 INDEX_REL = os.path.join("paper_search", "index.json")
+DOIS_PATH = os.path.join(DATA_DIR, "dois.json")      # written by fetch_dois.py
 
 TRUNCATED_TAIL = re.compile(
     r"\b(for|with|and|of|in|to|a|an|the|using|by|on|at|from|via|through|"
@@ -117,6 +118,15 @@ def load_overrides():
     return {k: v for k, v in data.items() if not k.startswith("_")}
 
 
+def load_dois():
+    """DOI / IEEE Xplore links resolved through Crossref (see fetch_dois.py)."""
+    if not os.path.isfile(DOIS_PATH):
+        return {}
+    with open(DOIS_PATH, encoding="utf-8") as f:
+        data = json.load(f)
+    return {k: v for k, v in data.items() if v and not k.startswith("_")}
+
+
 # ---------------------------------------------------------------------------
 # build
 # ---------------------------------------------------------------------------
@@ -125,6 +135,7 @@ def build(index_path):
     with open(index_path, encoding="utf-8") as f:
         source = json.load(f)
     overrides = load_overrides()
+    dois = load_dois()
     tag_ids = {t["id"] for t in tagdefs.all_tags()}
     for key, ov in overrides.items():
         for field in ("tags", "add", "remove"):
@@ -179,6 +190,9 @@ def build(index_path):
         authors = p.get("authors_full") or p.get("authors") or []
         doi = (p.get("doi") or "").strip()
         url = (p.get("url") or "").strip()
+        if not doi and key in dois:
+            doi = dois[key].get("doi", "")
+            url = url or dois[key].get("url", "")
         papers.append(dict(
             key=key,
             conf=conf,
@@ -291,6 +305,9 @@ def main():
     print("[build] kept %d papers (%s)" % (
         len(papers), ", ".join("%s %d" % kv for kv in sorted(per_conf.items()))))
     print("[build] tagged 'other': %d" % counts.get("other", 0))
+    linked = sum(1 for p in papers if p["doi"] or p["url"])
+    print("[build] direct IEEE links: %d/%d%s" % (
+        linked, len(papers), "" if os.path.isfile(DOIS_PATH) else "  (run build/fetch_dois.py to resolve more)"))
     print("[build] wrote %s (%.1f KB)" % (json_path, os.path.getsize(json_path) / 1024))
     print("[build] wrote %s" % js_path)
     print("[build] report: %s" % REPORT_PATH)
