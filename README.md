@@ -4,7 +4,9 @@ A public, searchable list of every **digital / architecture / accelerator** pape
 presented at **ISSCC (2010–2026)** and the **Symposium on VLSI Technology and
 Circuits (2010–2025)**, tagged by topic and charted by year.
 
-**Site:** https://hyunwonch.github.io/Personal.Paper_history/
+**Site:** https://hyunwon.blog/Personal.Paper_history/
+(`hyunwonch.github.io/Personal.Paper_history/` redirects there, because the
+account's GitHub Pages use the custom domain.)
 
 Plain static HTML, CSS and JavaScript, hosted on GitHub Pages. No build step
 is needed to serve it; `index.html` works from a local file too.
