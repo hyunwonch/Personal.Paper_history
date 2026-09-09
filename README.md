@@ -46,9 +46,9 @@ No abstracts or PDFs are hosted; links go to the DOI or an IEEE Xplore search.
 - **Search** matches title, authors, affiliations and session. Terms are
   AND-ed; use `"quoted phrases"`, `-exclude`, and the prefixes `title:`,
   `author:`, `inst:`, `session:`, `year:`, `conf:`.
-- **Topics**: click a topic chip once to require it, again to exclude it, a
-  third time to clear it. *any* / *all* controls how several required topics
-  combine. Counts on the chips reflect the other active filters.
+- **Topics**: click a topic chip to require it, click again to clear it. With
+  several topics selected, a paper must carry all of them. Counts on the chips
+  show how many of the current results carry each topic.
 - **Trends** switches to two charts: papers per year for the current
   selection (stacked ISSCC / VLSI), and one line per selected topic. Every
   chart has a table view underneath.

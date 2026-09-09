@@ -48,7 +48,7 @@
 
   const state = {
     q: '', conf: new Set(D.conferences), y0: Y0, y1: Y1,
-    inc: [], exc: new Set(), mode: 'any', sort: 'year-desc', view: 'list', limit: PAGE,
+    inc: [], sort: 'year-desc', view: 'list', limit: PAGE,
   };
 
   // ------------------------------------------------------------ helpers
@@ -105,16 +105,14 @@
     return PAPERS.filter(p => {
       if (!state.conf.has(p.conf)) return false;
       if (p.year < state.y0 || p.year > state.y1) return false;
-      for (const x of state.exc) if (p._tags.has(x)) return false;
       for (const t of terms) { const ok = matchTerm(p, t); if (t.neg ? ok : !ok) return false; }
       return true;
     });
   }
+  // every selected topic must be present (AND)
   function incFilter(list) {
     if (!state.inc.length) return list;
-    return list.filter(p => state.mode === 'all'
-      ? state.inc.every(t => p._tags.has(t))
-      : state.inc.some(t => p._tags.has(t)));
+    return list.filter(p => state.inc.every(t => p._tags.has(t)));
   }
   function sortPapers(list) {
     const confOrder = c => (c === 'ISSCC' ? 0 : 1);
@@ -160,13 +158,12 @@
     if (e.key === '/' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') { e.preventDefault(); qInput.focus(); }
   });
 
-  for (const r of document.querySelectorAll('input[name="mode"]')) r.addEventListener('change', () => { state.mode = r.value; update(); });
-  $('#clear-tags').addEventListener('click', () => { state.inc = []; state.exc.clear(); update(); });
+  $('#clear-tags').addEventListener('click', () => { state.inc = []; update(); });
   $('#reset-all').addEventListener('click', () => {
     state.q = ''; qInput.value = ''; state.conf = new Set(D.conferences);
     for (const cb of confRow.querySelectorAll('input')) cb.checked = true;
     state.y0 = Y0; state.y1 = Y1; y0sel.value = Y0; y1sel.value = Y1;
-    state.inc = []; state.exc.clear(); state.mode = 'any'; $('input[name="mode"][value="any"]').checked = true;
+    state.inc = [];
     update();
   });
 
@@ -181,7 +178,7 @@
     const chips = el('div', { class: 'chips' });
     for (const t of tags) {
       const chip = el('button', { type: 'button', class: 'chip', title: t.desc, dataset: { tag: t.id }, 'aria-pressed': 'false',
-        onclick: () => cycleTag(t.id) }, t.label, ' ', el('span', { class: 'n' }, ''));
+        onclick: () => toggleInclude(t.id) }, t.label, ' ', el('span', { class: 'n' }, ''));
       chipByTag.set(t.id, chip);
       chips.append(chip);
     }
@@ -190,41 +187,33 @@
     groupsHost.append(det);
   }
 
-  function cycleTag(id) {
-    const i = state.inc.indexOf(id);
-    if (i >= 0) { state.inc.splice(i, 1); state.exc.add(id); }
-    else if (state.exc.has(id)) state.exc.delete(id);
-    else state.inc.push(id);
-    update();
-  }
   function toggleInclude(id) {
     const i = state.inc.indexOf(id);
-    if (i >= 0) state.inc.splice(i, 1); else { state.exc.delete(id); state.inc.push(id); }
+    if (i >= 0) state.inc.splice(i, 1); else state.inc.push(id);
     update();
   }
 
-  function paintChips(base) {
+  // counts come from the current result set, so a chip reads as
+  // "how many of these papers would remain if I also require this topic"
+  function paintChips(res) {
     const counts = new Map();
-    for (const p of base) for (const t of p.tags) counts.set(t, (counts.get(t) || 0) + 1);
+    for (const p of res) for (const t of p.tags) counts.set(t, (counts.get(t) || 0) + 1);
     for (const [id, chip] of chipByTag) {
       const n = counts.get(id) || 0;
       chip.querySelector('.n').textContent = fmt(n);
-      const inc = state.inc.includes(id), exc = state.exc.has(id);
+      const inc = state.inc.includes(id);
       chip.classList.toggle('inc', inc);
-      chip.classList.toggle('exc', exc);
-      chip.classList.toggle('zero', !n && !inc && !exc);
-      chip.setAttribute('aria-pressed', inc ? 'true' : exc ? 'mixed' : 'false');
+      chip.classList.toggle('zero', !n && !inc);
+      chip.setAttribute('aria-pressed', inc ? 'true' : 'false');
     }
   }
 
   function paintActive() {
     const host = $('#active-filters');
     host.textContent = '';
-    for (const id of state.inc) host.append(el('span', { class: 'af inc' }, '+ ' + TAG.get(id).label,
+    for (const id of state.inc) host.append(el('span', { class: 'af inc' }, TAG.get(id).label,
       el('button', { type: 'button', 'aria-label': 'remove', onclick: () => { state.inc = state.inc.filter(x => x !== id); update(); } }, '×')));
-    for (const id of state.exc) host.append(el('span', { class: 'af exc' }, '− ' + TAG.get(id).label,
-      el('button', { type: 'button', 'aria-label': 'remove', onclick: () => { state.exc.delete(id); update(); } }, '×')));
-    if (state.inc.length > 1) host.append(el('span', { class: 'af' }, 'match ' + (state.mode === 'all' ? 'all' : 'any')));
+    if (state.inc.length > 1) host.append(el('span', { class: 'af' }, 'papers carrying all ' + state.inc.length + ' topics'));
   }
 
   // ------------------------------------------------------------ results list
@@ -539,8 +528,6 @@
     if (state.conf.size !== D.conferences.length) q.set('c', [...state.conf].join(','));
     if (state.y0 !== Y0 || state.y1 !== Y1) q.set('y', state.y0 + '-' + state.y1);
     if (state.inc.length) q.set('t', state.inc.join(','));
-    if (state.exc.size) q.set('x', [...state.exc].join(','));
-    if (state.mode !== 'any') q.set('m', state.mode);
     if (state.sort !== 'year-desc') q.set('s', state.sort);
     if (state.view !== 'list') q.set('v', state.view);
     const s = q.toString();
@@ -559,8 +546,6 @@
       if (YEARS.includes(a) && YEARS.includes(b) && a <= b) { state.y0 = a; state.y1 = b; y0sel.value = a; y1sel.value = b; }
     }
     if (q.get('t')) state.inc = q.get('t').split(',').filter(t => TAG.has(t));
-    if (q.get('x')) state.exc = new Set(q.get('x').split(',').filter(t => TAG.has(t) && !state.inc.includes(t)));
-    if (q.get('m') === 'all') { state.mode = 'all'; $('input[name="mode"][value="all"]').checked = true; }
     if (q.get('s')) { state.sort = q.get('s'); $('#sort').value = state.sort; }
     if (q.get('v') === 'trend') state.view = 'trend';
   }
@@ -608,7 +593,7 @@
     const { base, res } = compute();
     $('#count').textContent = '';
     $('#count').append(fmt(res.length) + ' papers', el('span', { class: 'sub' }, ' of ' + fmt(PAPERS.length)));
-    paintChips(base);
+    paintChips(res);
     paintActive();
     for (const b of document.querySelectorAll('.seg-btn')) b.setAttribute('aria-selected', b.dataset.view === state.view ? 'true' : 'false');
     const trend = $('#trend');

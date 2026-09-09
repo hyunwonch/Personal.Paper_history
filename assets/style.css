@@ -129,8 +129,6 @@ p { margin: 0; }
 .label-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
 .label-row .label { margin: 0; }
 .label-row .link-btn { margin-left: auto; }
-.mode { display: inline-flex; gap: 8px; font-size: 12.5px; color: var(--ink2); }
-.mode label { display: inline-flex; align-items: center; gap: 3px; cursor: pointer; }
 .hint { color: var(--muted); font-size: 11.5px; margin-top: 6px; line-height: 1.4; }
 input[type="search"], select {
   width: 100%; border: 1px solid var(--border-strong); background: var(--page); color: var(--ink);
@@ -164,8 +162,6 @@ input[type="search"]:focus, select:focus { outline: 2px solid var(--accent); out
 .chip .n { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 11px; }
 .chip.inc { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .chip.inc .n { color: var(--accent-ink); opacity: .8; }
-.chip.exc { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); text-decoration: line-through; }
-.chip.exc .n { color: var(--danger); }
 .chip.zero { opacity: .45; }
 .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
@@ -186,7 +182,6 @@ input[type="search"]:focus, select:focus { outline: 2px solid var(--accent); out
 .active-filters:empty { display: none; }
 .af { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; border-radius: 999px; padding: 2px 8px; border: 1px solid var(--border); background: var(--surface); }
 .af.inc { border-color: var(--accent); color: var(--accent); }
-.af.exc { border-color: var(--danger); color: var(--danger); }
 .af button { border: 0; background: none; cursor: pointer; padding: 0; line-height: 1; font-size: 14px; color: inherit; }
 
 /* results */
