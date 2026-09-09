@@ -1,0 +1,7 @@
+{
+  "_comment": "Manual fixes keyed by '<CONF>-<year>-<paper id>'. Fields: include (true/false), tags (replace), add, remove, note. Keys starting with '_' are ignored.",
+  "ISSCC-2018-7.5": {"include": false, "note": "buck DC-DC converter with a TRNG-based controller; a power paper"},
+  "VLSI-2022-S1-46": {"include": false, "note": "side-channel-resilient SAR ADC; a data-converter paper"},
+  "VLSI-2015-C5-5": {"include": true, "note": "iterative detection/decoding ASIC for LDPC-coded MIMO, not an RF receiver"},
+  "VLSI-2010-C08P4": {"include": true, "note": "per-core clock generation for the POWER7 microprocessor"}
+}
