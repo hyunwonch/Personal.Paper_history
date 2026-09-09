@@ -27,9 +27,9 @@ title, authors, affiliations, a DOI or IEEE Xplore link, and one or more of
   server / datacenter, domain-specific accelerator / DSP, reconfigurable /
   FPGA / CGRA, NoC / interconnect, memory / SRAM / DRAM / cache, emerging
   NVM, chiplet / 3D integration, microcontroller / IoT / ULP
-- **AI & ML** – deep-learning accelerator, transformer / LLM, generative AI,
-  compute-in-memory, neuromorphic / SNN, sparsity, quantization / precision,
-  on-device training, edge AI / TinyML
+- **AI & ML** – deep-learning accelerator, transformer / LLM / GenAI,
+  generative AI (diffusion / GAN), compute-in-memory, neuromorphic / SNN,
+  sparsity, quantization / precision, on-device training, edge AI / TinyML
 - **Applications** – vision, video codec, robotics / autonomous, automotive,
   AR / VR, speech / audio, communication / baseband DSP, security /
   cryptography, genomics, scientific / HPC, Ising / SAT / probabilistic,
@@ -81,8 +81,10 @@ Two rule files decide what you see:
   not be a device-technology paper, and must not be an analog subject that
   merely mentions a processor ("SRAM for Arm HPC Processor").
 - `build/tags.py` – the topic taxonomy and the title-keyword rule for each
-  tag. Tags are assigned from titles only, so every year is tagged with the
-  same evidence.
+  tag. Tags are assigned from titles, so every year is tagged with the same
+  evidence; `SESSION_TAGS` adds a tag to every paper of a named session (the
+  ISSCC "AI Accelerators" sessions from 2025 on carry Transformer / LLM /
+  GenAI as a whole).
 
 `build/overrides.json` holds manual corrections keyed by
 `<CONF>-<year>-<paper id>` (force a paper in or out, replace / add / remove

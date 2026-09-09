@@ -124,19 +124,22 @@ TAGS = [
             learning processor|learning accelerator|neural-network|neuro-controller|
             autoencoder|u-net|feature extract\w*|classifier|classification|perceptron|hyperdimensional
          """),
-    dict(id="transformer-llm", label="Transformer / LLM", group="AI & ML",
-         desc="Transformer, attention and large-language-model accelerators, including speculative decoding and MoE.",
+    dict(id="transformer-llm", label="Transformer / LLM / GenAI", group="AI & ML",
+         desc="Transformer, attention, large-language-model and generative-AI accelerators: LLM inference and training, speculative decoding, MoE, VLMs, state-space models, diffusion and autoregressive generation, AI agents.",
          pattern=r"""
-            transformers?|\bllms?\b|large[- ]language|language[- ](model|processing)|attention|
-            \bbert\b|\bgpt\b|llama|\btokens?\b|token/s|speculative decoding|mixture-of-experts|\bmoe\b|
+            transformers?|\bllms?\b|large[- ]language|language[- ](models?|processing unit|generation)|(?<!channel )attention|
+            \bbert\b|\bgpt\b|llama|\btokens?\b|token/s|speculative[- ]decoding|mixture-of-experts|\bmoe\b|
             state-space model|\bssm\b|mamba|vision-language|\bvlm\b|multimodal|multi-modal|
-            gemm|softmax|kv-?cache|prefill|decoding language|\bqkv\b
+            gemm|softmax|kv-?cache|prefill|decoding language|\bqkv\b|
+            generative|gen-?ai\b|chain-of-thought|\bcot\b|distill\w*|foundation models?|billion-parameter|
+            (ai|social|multi-ai|llm) agents?|agentic|autoregressive|text-to-\w+|
+            (?<!drift-)(?<!drift )diffusion(?![- ]fet)|classifier-free|rotation-based|outlier-free
          """),
     dict(id="generative", label="Generative AI (Diffusion / GAN)", group="AI & ML",
          desc="Generative model processors: diffusion, GANs, text-to-image/motion and visual autoregressive generation.",
          pattern=r"""
-            diffusion|\bgans?\b|generative|autoregressive|text-to-|image generation|content generation|
-            denoising|\bvae\b|classifier-free
+            (?<!drift-)(?<!drift )diffusion(?![- ]fet)|\bgans?\b|generative|gen-?ai\b|autoregressive|text-to-\w+|
+            image generation|content generation|denoising|\bvae\b|classifier-free
          """),
     dict(id="cim", label="Compute-in-Memory", group="AI & ML",
          desc="Compute-in-memory and processing-in-memory macros and processors (SRAM, eDRAM, RRAM, MRAM, flash, DRAM).",
@@ -373,6 +376,15 @@ TAGS = [
          """),
 ]
 
+# Tags that every paper in a session receives, on top of the title rules.
+# Fields: conf (regex or None), session (regex on the session name), min_year, tag.
+# The ISSCC "AI Accelerators" sessions (2025 on) are the LLM / generative-AI
+# sessions of the program; earlier sessions with that name (VLSI 2019) hold
+# CNN/DNN chips and are left to the title rules.
+SESSION_TAGS = [
+    dict(conf=r"^ISSCC$", session=r"^ai.accelerators?$", min_year=2025, tag="transformer-llm"),
+]
+
 # When a title matches no tag, the session name still says what the paper is.
 SESSION_FALLBACK = [
     (r"processor|soc", "cpu"),
@@ -403,11 +415,31 @@ def _compile(pattern):
 
 COMPILED = [(t, _compile(t["pattern"])) for t in TAGS]
 FALLBACK_COMPILED = [(re.compile(rx, re.I), tag) for rx, tag in SESSION_FALLBACK]
+SESSION_TAGS_COMPILED = [
+    (re.compile(r["conf"], re.I) if r.get("conf") else None, re.compile(r["session"], re.I), r.get("min_year", 0), r["tag"])
+    for r in SESSION_TAGS
+]
 
 
-def tag_title(title_folded, session_name_folded=""):
+def session_tags(conf, year, session_name_folded):
+    """Extra tag ids that the session itself confers on every paper in it."""
+    out = []
+    for conf_rx, sess_rx, min_year, tag in SESSION_TAGS_COMPILED:
+        if conf_rx and not conf_rx.search(conf or ""):
+            continue
+        if year < min_year:
+            continue
+        if sess_rx.search((session_name_folded or "").strip()):
+            out.append(tag)
+    return out
+
+
+def tag_title(title_folded, session_name_folded="", conf="", year=0):
     """Return the list of tag ids for one paper."""
     tags = [t["id"] for t, rx in COMPILED if rx.search(title_folded)]
+    for t in session_tags(conf, year, session_name_folded):
+        if t not in tags:
+            tags.append(t)
     if not tags:
         for rx, tag in FALLBACK_COMPILED:
             if rx.search(session_name_folded):

@@ -168,7 +168,7 @@ def build(index_path):
         st["kept"] += 1
 
         folded = scope.fold(title)
-        tag_list = ov.get("tags") or tagdefs.tag_title(folded, scope.fold(sname))
+        tag_list = ov.get("tags") or tagdefs.tag_title(folded, scope.fold(sname), conf, year)
         for t in ov.get("add", []):
             if t not in tag_list:
                 tag_list.append(t)
